@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <!-- Улучшенные мета-теги для iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="D&D Dice">
+    <meta name="format-detection" content="telephone=no">
+    <title>D&D Dice | Современный генератор кубиков</title>
+    
+    <!-- Предзагрузка шрифтов с улучшениями для iOS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        /* Все ваши оригинальные стили сохранены */
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #10b981;
+            --background: #f9fafb;
+            --surface: #ffffff;
+            --error: #ef4444;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --elevation-1: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --elevation-2: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --elevation-3: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --animation-standard: cubic-bezier(0.4, 0, 0.2, 1);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-full: 9999px;
+        }
+
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --secondary: #34d399;
+            --background: #111827;
+            --surface: #1f2937;
+            --error: #f87171;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent; /* Убирает голубой highlight при тапе на iOS */
+            -webkit-user-select: none; /* Предотвращает выделение текста при тапе */
+            user-select: none;
+        }
+
+        /* Добавлены улучшения для body */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s var(--animation-standard);
+            -webkit-text-size-adjust: 100%; /* Предотвращает авто-масштабирование текста на iOS */
+            -webkit-font-smoothing: antialiased; /* Улучшает рендеринг шрифтов */
+            text-rendering: optimizeLegibility;
+            overflow-x: hidden;
+        }
+
+        /* Улучшения для скролла на iOS */
+        .content {
+            flex: 1;
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
+        }
+
+        /* Улучшения для навигационных табов */
+        .nav-tabs {
+            display: flex;
+            background-color: var(--surface);
+            padding: 0 1.5rem;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
+            scrollbar-width: none; /* Скрыть scrollbar в Firefox */
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none; /* Скрыть scrollbar в WebKit */
+        }
+
+        /* Улучшения для кнопок на iOS */
+        .btn, .theme-toggle, .quick-roll {
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation; /* Улучшает отзывчивость касаний */
+        }
+
+        /* Улучшения анимаций для iOS */
+        @keyframes diceRoll {
+            0% { 
+                transform: rotate(0deg) scale(1); 
+                -webkit-transform: rotate(0deg) scale(1);
+            }
+            25% { 
+                transform: rotate(90deg) scale(0.8); 
+                -webkit-transform: rotate(90deg) scale(0.8);
+            }
+            50% { 
+                transform: rotate(180deg) scale(1.2); 
+                -webkit-transform: rotate(180deg) scale(1.2);
+            }
+            75% { 
+                transform: rotate(270deg) scale(0.9); 
+                -webkit-transform: rotate(270deg) scale(0.9);
+            }
+            100% { 
+                transform: rotate(360deg) scale(1); 
+                -webkit-transform: rotate(360deg) scale(1);
+            }
+        }
+
+        /* Улучшения для полей ввода на iOS */
+        .form-control {
+            -webkit-appearance: none;
+            border-radius: var(--radius-md);
+            font-size: 16px; /* Предотвращает зум на iOS при фокусе */
+        }
+
+        /* Улучшения для мобильных устройств */
+        @media (max-width: 640px) {
+            .content {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .nav-tabs {
+                padding: 0 1rem;
+            }
+            
+            /* Улучшения для виртуальной клавиатуры iOS */
+            input, select, textarea {
+                font-size: 16px; /* Предотвращает зум на iOS при фокусе */
+            }
+        }
+
+        /* Все остальные ваши оригинальные стили остаются без изменений */
+        .app-bar {
+            background-color: var(--surface);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--elevation-1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .app-title {
+            font-family: 'UnifrakturMaguntia', cursive;
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--animation-standard);
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] .theme-toggle:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .nav-tab {
+            padding: 1rem 1.25rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.875rem;
+            letter-spacing: 0.025em;
+            position: relative;
+            transition: all 0.3s var(--animation-standard);
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+            border-radius: 2px 2px 0 0;
+        }
+
+        .nav-tab:hover {
+            color: var(--primary);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s var(--animation-standard);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background-color: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--elevation-1);
+            border: 1px solid var(--border);
+            transition: all 0.3s var(--animation-standard);
+        }
+
+        .card:hover {
+            box-shadow: var(--elevation-2);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            box-shadow: var(--elevation-1);
+            transition: all 0.3s var(--animation-standard);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            box-shadow: var(--elevation-2);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: var(--surface);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .btn-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            padding: 0;
+            border-radius: var(--radius-full);
+        }
+
+        .dice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            position: absolute;
+            left: 0.75rem;
+            top: -0.5rem;
+            background-color: var(--surface);
+            padding: 0 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            z-index: 10;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background-color: var(--surface);
+            color: var(--text-primary);
+            transition: all 0.2s var(--animation-standard);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .dice-result {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: rgba(99, 102, 241, 0.05);
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            border: 1px dashed var(--primary);
+        }
+
+        .dice-visual {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            animation: diceRoll 0.6s var(--animation-standard);
+        }
+
+        .result-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .result-context {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background-color: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .quick-rolls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-roll {
+            background-color: var(--surface);
+            color: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s var(--animation-standard);
+        }
+
+        .quick-roll:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .history {
+            margin-top: 1.5rem;
+        }
+
+        .history-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-dice {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .history-result {
+            font-weight: 600;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .history-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .rules-list {
+            list-style: none;
+        }
+
+        .rules-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .rules-list li::before {
+            content: '•';
+            color: var(--primary);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        .footer {
+            background-color: var(--surface);
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer p {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Весь ваш оригинальный HTML остался без изменений -->
+    <header class="app-bar">
+        <div class="app-title">D&D Dice</div>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
+            <span class="material-icons">brightness_4</span>
+        </button>
+    </header>
+    
+    <nav class="nav-tabs">
+        <a href="#" class="nav-tab active" data-page="home">Главная</a>
+        <a href="#" class="nav-tab" data-page="dice">Кубики</a>
+        <a href="#" class="nav-tab" data-page="info">Информация</a>
+    </nav>
+    
+    <main class="content">
+        <section id="home" class="page active">
+            <div class="card">
+                <h2>Добро пожаловать в D&D Dice!</h2>
+                <p>Современный генератор кубиков для ваших настольных приключений. Просто, удобно и стильно.</p>
+                
+                <button class="btn" id="go-to-dice">
+                    <span class="material-icons">casino</span>
+                    Начать бросать кубики
+                </button>
+            </div>
+            
+            <div class="card">
+                <h2>Возможности</h2>
+                <ul class="rules-list">
+                    <li>Все типы кубиков: от D4 до D100</li>
+                    <li>Красивые анимации бросков</li>
+                    <li>Полная история и статистика</li>
+                    <li>Сохранение данных между сессиями</li>
+                    <li>Темная и светлая темы</li>
+                    <li>Адаптивный дизайн для всех устройств</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="dice" class="page">
+            <div class="card">
+                <h2>Бросок кубика</h2>
+                
+                <div class="dice-container">
+                    <div class="form-group">
+                        <label class="form-label">Тип кубика</label>
+                        <select id="dice-type" class="form-control">
+                            <option value="4">D4</option>
+                            <option value="6" selected>D6</option>
+                            <option value="8">D8</option>
+                            <option value="10">D10</option>
+                            <option value="12">D12</option>
+                            <option value="20">D20</option>
+                            <option value="100">D100</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Описание броска</label>
+                        <input type="text" class="form-control" id="roll-description" placeholder="Например: Атака мечом">
+                    </div>
+                    
+                    <button id="roll-button" class="btn">
+                        <span class="material-icons">casino</span>
+                        Бросить кубик
+                    </button>
+                </div>
+                
+                <div id="dice-result" class="dice-result">
+                    <div class="dice-visual">⚄</div>
+                    <div class="result-value">Нажмите "Бросить"</div>
+                    <div id="roll-context" class="result-context"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Быстрые броски</h2>
+                <div class="quick-rolls">
+                    <button class="quick-roll" data-dice="20">D20</button>
+                    <button class="quick-roll" data-dice="12">D12</button>
+                    <button class="quick-roll" data-dice="10">D10</button>
+                    <button class="quick-roll" data-dice="8">D8</button>
+                    <button class="quick-roll" data-dice="6">D6</button>
+                    <button class="quick-roll" data-dice="4">D4</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Статистика</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-rolls">0</div>
+                        <div class="stat-label">Всего бросков</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="average-roll">0</div>
+                        <div class="stat-label">Среднее</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="max-roll">0</div>
+                        <div class="stat-label">Максимум</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="min-roll">0</div>
+                        <div class="stat-label">Минимум</div>
+                    </div>
+                </div>
+                
+                <div class="history">
+                    <h3>История бросков</h3>
+                    <div id="roll-history"></div>
+                </div>
+                
+                <button id="clear-history" class="btn-secondary" style="margin-top: 1rem;">
+                    <span class="material-icons">delete</span>
+                    Очистить историю
+                </button>
+            </div>
+        </section>
+        
+        <section id="info" class="page">
+            <div class="card">
+                <h2>О Dungeons & Dragons</h2>
+                <p>D&D — это настольная ролевая игра, где вы создаете персонажей и отправляетесь в эпические приключения в фэнтезийных мирах.</p>
+                <p>Мастер подземелий описывает мир, а игроки принимают решения, используя кубики для определения успеха действий.</p>
+            </div>
+            
+            <div class="card">
+                <h2>Основные правила</h2>
+                <ul class="rules-list">
+                    <li>Создайте персонажа с уникальными характеристиками</li>
+                    <li>Бросайте кубики для проверки навыков и атак</li>
+                    <li>D20 — основной кубик для большинства проверок</li>
+                    <li>Другие кубики используются для определения урона</li>
+                    <li>Главное — весело провести время и создать интересную историю</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>Типы кубиков</h2>
+                <ul class="rules-list">
+                    <li><strong>D4</strong> - 4 грани, для малого урона</li>
+                    <li><strong>D6</strong> - 6 граней, стандартный кубик</li>
+                    <li><strong>D8</strong> - 8 граней, для среднего урона</li>
+                    <li><strong>D10</strong> - 10 граней, для процентов или урона</li>
+                    <li><strong>D12</strong> - 12 граней, для большого урона</li>
+                    <li><strong>D20</strong> - 20 граней, основной кубик для проверок</li>
+                    <li><strong>D100</strong> - 100 граней (обычно два D10), для процентных шансов</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="footer">
+        <p>Неофициальный инструмент для D&D</p>
+        <p>© 2025 Все права защищены</p>
+    </footer>
+
+    <script>
+        // Добавлен обработчик для предотвращения zoom при двойном тапе на iOS
+        document.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Весь ваш оригинальный JavaScript код остается без изменений
+        document.addEventListener('DOMContentLoaded', function() {
+            // Элементы DOM
+            const themeToggle = document.getElementById('theme-toggle');
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const pages = document.querySelectorAll('.page');
+            const goToDiceBtn = document.getElementById('go-to-dice');
+            const rollButton = document.getElementById('roll-button');
+            const diceType = document.getElementById('dice-type');
+            const rollDescription = document.getElementById('roll-description');
+            const diceResult = document.getElementById('dice-result');
+            const diceVisual = diceResult.querySelector('.dice-visual');
+            const resultValue = diceResult.querySelector('.result-value');
+            const rollContext = document.getElementById('roll-context');
+            const quickRolls = document.querySelectorAll('.quick-roll');
+            const totalRollsEl = document.getElementById('total-rolls');
+            const averageRollEl = document.getElementById('average-roll');
+            const maxRollEl = document.getElementById('max-roll');
+            const minRollEl = document.getElementById('min-roll');
+            const rollHistory = document.getElementById('roll-history');
+            const clearHistoryBtn = document.getElementById('clear-history');
+            
+            // Статистика и история
+            const stats = {
+                totalRolls: 0,
+                sum: 0,
+                max: 0,
+                min: Infinity,
+                rolls: [],
+                
+                // Загрузка данных из localStorage
+                load: function() {
+                    const savedStats = localStorage.getItem('diceStats');
+                    if (savedStats) {
+                        const parsed = JSON.parse(savedStats);
+                        this.totalRolls = parsed.totalRolls || 0;
+                        this.sum = parsed.sum || 0;
+                        this.max = parsed.max || 0;
+                        this.min = parsed.min === undefined ? Infinity : parsed.min;
+                        this.rolls = parsed.rolls || [];
+                    }
+                    this.updateStats();
+                    this.updateHistory();
+                },
+                
+                // Сохранение данных в localStorage
+                save: function() {
+                    localStorage.setItem('diceStats', JSON.stringify({
+                        totalRolls: this.totalRolls,
+                        sum: this.sum,
+                        max: this.max,
+                        min: this.min === Infinity ? null : this.min,
+                        rolls: this.rolls
+                    }));
+                },
+                
+                updateStats: function() {
+                    totalRollsEl.textContent = this.totalRolls;
+                    averageRollEl.textContent = this.totalRolls > 0 ? Math.round(this.sum / this.totalRolls) : 0;
+                    maxRollEl.textContent = this.max;
+                    minRollEl.textContent = this.min === Infinity ? 0 : this.min;
+                },
+                
+                addRoll: function(result, sides, description) {
+                    this.totalRolls++;
+                    this.sum += result;
+                    if (result > this.max) this.max = result;
+                    if (result < this.min) this.min = result;
+                    
+                    const roll = {
+                        result,
+                        sides,
+                        description,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    this.rolls.unshift(roll);
+                    
+                    // Ограничиваем историю последними 20 бросками
+                    if (this.rolls.length > 20) this.rolls.pop();
+                    
+                    this.updateStats();
+                    this.updateHistory();
+                    this.save();
+                },
+                
+                updateHistory: function() {
+                    rollHistory.innerHTML = this.rolls.map(roll => {
+                        const date = new Date(roll.timestamp);
+                        return `
+                            <div class="history-item">
+                                <div>
+                                    <div>
+                                        <span class="history-dice">D${roll.sides}</span>: 
+                                        <span class="history-result">${roll.result}</span>
+                                        <span class="history-time">${date.toLocaleTimeString()}</span>
+                                    </div>
+                                    ${roll.description ? `<div class="history-desc">${roll.description}</div>` : ''}
+                                </div>
+                                <span class="material-icons" style="color: var(--text-secondary); font-size: 1rem;">arrow_forward</span>
+                            </div>
+                        `;
+                    }).join('') || '<p style="color: var(--text-secondary);">История бросков пуста</p>';
+                },
+                
+                clearHistory: function() {
+                    if (confirm('Вы уверены, что хотите очистить историю бросков?')) {
+                        this.totalRolls = 0;
+                        this.sum = 0;
+                        this.max = 0;
+                        this.min = Infinity;
+                        this.rolls = [];
+                        this.updateStats();
+                        this.updateHistory();
+                        this.save();
+                    }
+                }
+            };
+            
+            // Переключение темы
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                themeToggle.innerHTML = newTheme === 'dark' ? 
+                    '<span class="material-icons">brightness_7</span>' : 
+                    '<span class="material-icons">brightness_4</span>';
+            });
+            
+            // Проверить сохраненную тему
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.body.setAttribute('data-theme', savedTheme);
+                themeToggle.innerHTML = savedTheme === 'dark' ? 
+                    '<span class="material-icons">brightness_7</span>' : 
+                    '<span class="material-icons">brightness_4</span>';
+            }
+            
+            // Навигация по страницам
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageId = this.getAttribute('data-page');
+                    
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    pages.forEach(p => p.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(pageId).classList.add('active');
+                });
+            });
+            
+            // Кнопка "Перейти к броскам"
+            goToDiceBtn.addEventListener('click', function() {
+                navTabs.forEach(t => t.classList.remove('active'));
+                pages.forEach(p => p.classList.remove('active'));
+                
+                document.querySelector('.nav-tab[data-page="dice"]').classList.add('active');
+                document.getElementById('dice').classList.add('active');
+            });
+            
+            // Бросок кубика
+            function rollDice(sides) {
+                return Math.floor(Math.random() * sides) + 1;
+            }
+            
+            function getDiceSymbol(result, sides) {
+                const diceSymbols = {
+                    4: ['⚀', '⚁', '⚂', '⚃'],
+                    6: ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'],
+                    8: ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅', '⚆', '⚇'],
+                    10: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                    12: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+                    20: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'],
+                    100: ['00', '10', '20', '30', '40', '50', '60', '70', '80', '90']
+                };
+                
+                return diceSymbols[sides] ? diceSymbols[sides][result - 1] : result;
+            }
+            
+            function animateDiceRoll(sides) {
+                diceVisual.style.animation = 'none';
+                void diceVisual.offsetWidth; // Trigger reflow
+                diceVisual.style.animation = 'diceRoll 0.6s ease';
+                
+                resultValue.textContent = 'Бросок...';
+                rollContext.textContent = '';
+                
+                setTimeout(() => {
+                    const result = rollDice(sides);
+                    const symbol = getDiceSymbol(result, sides);
+                    const description = rollDescription.value.trim();
+                    
+                    diceVisual.textContent = symbol;
+                    resultValue.textContent = `${result}`;
+                    
+                    if (description) {
+                        rollContext.textContent = `${description}`;
+                    }
+                    
+                    stats.addRoll(result, sides, description);
+                }, 600);
+            }
+            
+            // Основной бросок
+            rollButton.addEventListener('click', function() {
+                const sides = parseInt(diceType.value);
+                animateDiceRoll(sides);
+            });
+            
+            // Быстрые броски
+            quickRolls.forEach(button => {
+                button.addEventListener('click', function() {
+                    const sides = parseInt(this.getAttribute('data-dice'));
+                    diceType.value = sides;
+                    animateDiceRoll(sides);
+                });
+            });
+            
+            // Очистка истории
+            clearHistoryBtn.addEventListener('click', function() {
+                stats.clearHistory();
+            });
+            
+            // Инициализация
+            stats.load();
+        });
+    </script>
+</body>
+</html>
